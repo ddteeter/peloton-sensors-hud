@@ -6,23 +6,24 @@ import {
   installVueDevtools
 } from "vue-cli-plugin-electron-builder/lib";
 import BluetoothDeviceService from "./service/background/BluetoothDeviceService";
+import PelotonWindowService from "./service/background/PelotonWindowService";
 const isDevelopment = process.env.NODE_ENV !== "production";
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let win: BrowserWindow | null;
 const bluetoothDeviceService = new BluetoothDeviceService(ipcMain);
+let pelotonWindowService: PelotonWindowService;
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true } }
 ]);
+let isDevAndNotTest = false;
 
 function createWindow() {
   // Create the browser window.
   win = new BrowserWindow({
-    width: 800,
-    height: 600,
     webPreferences: {
       nodeIntegration: true
     },
@@ -30,11 +31,12 @@ function createWindow() {
   });
   win.maximize();
   win.show();
+  win.setMenu(null);
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
     win.loadURL(process.env.WEBPACK_DEV_SERVER_URL as string);
-    if (!process.env.IS_TEST) win.webContents.openDevTools();
+    if (!process.env.IS_TEST) win.webContents.openDevTools({ mode: "detach" });
   } else {
     createProtocol("app");
     // Load the index.html when not in development
@@ -46,6 +48,10 @@ function createWindow() {
   });
 
   bluetoothDeviceService.handleDevices(win);
+  if (pelotonWindowService) {
+    pelotonWindowService.deregister();
+  }
+  pelotonWindowService = new PelotonWindowService(win, isDevAndNotTest);
 }
 
 if (process.platform === "linux") {
@@ -78,7 +84,8 @@ app.on("activate", () => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on("ready", async () => {
-  if (isDevelopment && !process.env.IS_TEST) {
+  isDevAndNotTest = isDevelopment && !process.env.IS_TEST;
+  if (isDevAndNotTest) {
     // Install Vue Devtools
     try {
       await installVueDevtools();

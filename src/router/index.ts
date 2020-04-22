@@ -1,7 +1,7 @@
 import Vue from "vue";
 import VueRouter, { RouteConfig } from "vue-router";
 import Home from "../views/Home.vue";
-import Devices from "../views/Devices.vue";
+import Settings from "../views/Settings.vue";
 import BluetoothDeviceService from "../model/SelectableBluetoothDevice";
 import BluetoothDeviceServiceType from "@/model/BluetoothDeviceServiceType";
 
@@ -14,9 +14,9 @@ const routes: Array<RouteConfig> = [
     component: Home
   },
   {
-    path: "/devices",
-    name: "Devices",
-    component: Devices,
+    path: "/settings",
+    name: "Settings",
+    component: Settings,
     props: {
       selectableDevices: [
         new BluetoothDeviceService(BluetoothDeviceServiceType.HR, "Heart Rate"),

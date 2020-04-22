@@ -1,6 +1,8 @@
 import { Module, VuexModule, Mutation, Action } from "vuex-module-decorators";
 import TypedBluetoothDevice from "@/model/TypedBluetoothDevice";
 import ConnectedBluetoothDevice from "@/model/ConnectedBluetoothDevice";
+import SettingsPersistenceService from "@/service/renderer/SettingsPersistenceService";
+import TypedFlyweightBluetoothDevice from "@/model/TypedFlyweightBluetoothDevice";
 
 export interface DevicesState {
   selectedDevices: TypedBluetoothDevice[];
@@ -11,6 +13,21 @@ export interface DevicesState {
 export class Devices extends VuexModule {
   selectedDevices: DevicesState["selectedDevices"] = [];
   connectedDevices: DevicesState["connectedDevices"] = [];
+
+  private bluetoothDevicePersistenceService: SettingsPersistenceService;
+
+  constructor(module: Devices) {
+    super(module);
+    this.bluetoothDevicePersistenceService = new SettingsPersistenceService();
+  }
+
+  private persistSelectedDevices() {
+    this.bluetoothDevicePersistenceService.persistDevices(
+      this.selectedDevices.map((device) => {
+        return new TypedFlyweightBluetoothDevice(device.type, device.device.id);
+      })
+    );
+  }
 
   @Mutation
   setSelectedDevice(newDevice: TypedBluetoothDevice) {
@@ -23,6 +40,7 @@ export class Devices extends VuexModule {
     } else {
       this.selectedDevices.push(newDevice);
     }
+    this.persistSelectedDevices();
   }
 
   @Mutation
@@ -34,6 +52,7 @@ export class Devices extends VuexModule {
     if (existingIndex > -1) {
       this.selectedDevices.splice(existingIndex, 1);
     }
+    this.persistSelectedDevices();
   }
 
   @Mutation

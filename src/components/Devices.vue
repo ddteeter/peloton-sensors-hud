@@ -1,7 +1,7 @@
 <template>
-  <div class="about">
+  <div class="devices">
     <h1>Devices</h1>
-    <div class="devices">
+    <div class="devices-list">
       <Device
         v-for="device in mergedDevices"
         :key="device.selectable.type"

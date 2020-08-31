@@ -1,6 +1,6 @@
 <template>
   <div class="home">
-    <div style="position: absolute; bottom: 0px; height: 30px;">
+    <div style="position: absolute; bottom: 0px; height: 30px">
       In Video: {{ inVideo }}
     </div>
   </div>
@@ -9,13 +9,18 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { ipcRenderer } from "electron";
+
+import type { IpcRenderer } from "electron";
+
+declare const window: { ipcRenderer: IpcRenderer };
+
+const ipcRenderer = window.ipcRenderer;
 
 @Component
 export default class Home extends Vue {
   inVideo = false;
 
-  created() {
+  created(): void {
     ipcRenderer.send("peloton-window:show");
     ipcRenderer.on(
       "peloton:in-video",
@@ -26,7 +31,7 @@ export default class Home extends Vue {
     );
   }
 
-  destroyed() {
+  destroyed(): void {
     ipcRenderer.send("peloton-window:hide");
   }
 }

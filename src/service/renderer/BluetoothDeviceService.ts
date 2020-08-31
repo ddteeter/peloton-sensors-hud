@@ -1,11 +1,15 @@
 import BluetoothDeviceServiceType from "@/model/BluetoothDeviceServiceType";
 import FlyweightBluetoothDevice from "@/model/FlyweightBluetoothDevice";
-import { ipcRenderer, IpcMessageEvent } from "electron";
 import ConnectedBluetoothDevice from "@/model/ConnectedBluetoothDevice";
 import getTranslator, {
   SpeedOrCadenceConfig,
-  BluetoothReadingTranslator
+  BluetoothReadingTranslator,
 } from "@/service/renderer/BluetoothReadingTranslation";
+import type { IpcRenderer, IpcRendererEvent } from "electron";
+
+declare const window: { ipcRenderer: IpcRenderer };
+
+const ipcRenderer = window.ipcRenderer;
 
 export default class BluetoothDeviceService {
   chooseDevice(
@@ -13,7 +17,7 @@ export default class BluetoothDeviceService {
     devicesCallback: (devices: FlyweightBluetoothDevice[]) => void
   ): Promise<BluetoothDevice> {
     const availableDevicesHandler = (
-      _: IpcMessageEvent,
+      _: IpcRendererEvent,
       devices: FlyweightBluetoothDevice[]
     ) => {
       devicesCallback(devices);
@@ -25,9 +29,9 @@ export default class BluetoothDeviceService {
       .requestDevice({
         filters: [
           {
-            services: [type]
-          }
-        ]
+            services: [type],
+          },
+        ],
       })
       .finally(() => {
         ipcRenderer.removeListener(
@@ -56,7 +60,7 @@ export default class BluetoothDeviceService {
       }
       translator = getTranslator({
         type: connectedDevice.type,
-        options: speedOrCadenceConfig
+        options: speedOrCadenceConfig,
       });
     } else {
       translator = getTranslator({ type: connectedDevice.type });

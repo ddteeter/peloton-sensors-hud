@@ -1,10 +1,11 @@
+// eslint-disable-next-line
 const ipcRenderer = require("electron").ipcRenderer;
 
 const readyCallback = () => {
   const playerNodeStateRelay = (nodes, state) => {
     if (nodes && nodes.length > 0) {
       // element added to DOM
-      const hasClass = [].some.call(nodes, function(el) {
+      const hasClass = [].some.call(nodes, function (el) {
         let containsClass = false;
         if (el.classList) {
           containsClass = el.classList.contains("jwplayer");
@@ -17,8 +18,8 @@ const readyCallback = () => {
     }
   };
 
-  const observer = new MutationObserver(function(mutations) {
-    mutations.forEach(function(mutation) {
+  const observer = new MutationObserver(function (mutations) {
+    mutations.forEach(function (mutation) {
       playerNodeStateRelay(mutation.addedNodes, true);
       playerNodeStateRelay(mutation.removedNodes, false);
     });
@@ -28,7 +29,7 @@ const readyCallback = () => {
     attributes: true,
     childList: true,
     characterData: true,
-    subtree: true
+    subtree: true,
   };
 
   observer.observe(document.documentElement, config);

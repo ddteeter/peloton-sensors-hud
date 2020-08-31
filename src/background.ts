@@ -5,6 +5,7 @@ import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import BluetoothDeviceService from "./service/background/BluetoothDeviceService";
 import PelotonWindowService from "./service/background/PelotonWindowService";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
+import path from "path";
 const isDevelopment = process.env.NODE_ENV !== "production";
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -22,10 +23,10 @@ let isDevAndNotTest = false;
 function createWindow() {
   // Create the browser window.
   win = new BrowserWindow({
+    title: "Peloton Sensors HUD",
     webPreferences: {
-      // Use pluginOptions.nodeIntegration, leave this alone
-      // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
-      nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION === "true",
+      nodeIntegration: false,
+      preload: path.join(__dirname, "preload.js"),
     },
     show: false,
   });

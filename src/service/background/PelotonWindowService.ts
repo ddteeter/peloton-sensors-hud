@@ -11,18 +11,18 @@ export default class PelotonWindowService {
     const browserView = new BrowserView({
       webPreferences: {
         nodeIntegration: false,
-        preload: `${__static}/peloton/preload.js`
-      }
+        preload: `${__static}/peloton/preload.js`,
+      },
     });
     if (openDevTools) {
       browserView.webContents.openDevTools({ mode: "detach" });
     }
-    browserView.setAutoResize({ width: true, height: true });
+    browserView.setAutoResize({ horizontal: true, vertical: true });
     browserView.setBounds({
       x: 0,
-      y: 48,
+      y: 0,
       width: browserWindow.getSize()[0],
-      height: browserWindow.getSize()[1] - 168
+      height: browserWindow.getSize()[1] - 168,
     });
     browserView.webContents.loadURL("https://members.onepeloton.com");
 

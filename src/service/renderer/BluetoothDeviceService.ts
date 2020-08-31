@@ -2,6 +2,10 @@ import BluetoothDeviceServiceType from "@/model/BluetoothDeviceServiceType";
 import FlyweightBluetoothDevice from "@/model/FlyweightBluetoothDevice";
 import { ipcRenderer, IpcMessageEvent } from "electron";
 import ConnectedBluetoothDevice from "@/model/ConnectedBluetoothDevice";
+import getTranslator, {
+  SpeedOrCadenceConfig,
+  BluetoothReadingTranslator
+} from "@/service/renderer/BluetoothReadingTranslation";
 
 export default class BluetoothDeviceService {
   chooseDevice(
@@ -40,8 +44,24 @@ export default class BluetoothDeviceService {
 
   async startReading(
     connectedDevice: ConnectedBluetoothDevice,
-    onReading: (value: string) => void
+    onReading: (value: string) => void,
+    speedOrCadenceConfig?: SpeedOrCadenceConfig
   ): Promise<ConnectedBluetoothDevice> {
+    let translator: BluetoothReadingTranslator;
+    if (connectedDevice.type === BluetoothDeviceServiceType.SPEED_AND_CADENCE) {
+      if (speedOrCadenceConfig === undefined) {
+        throw new Error(
+          `Missing configuration options for ${connectedDevice.type}`
+        );
+      }
+      translator = getTranslator({
+        type: connectedDevice.type,
+        options: speedOrCadenceConfig
+      });
+    } else {
+      translator = getTranslator({ type: connectedDevice.type });
+    }
+
     const characterstic = await this.getPrimaryCharacterstic(connectedDevice);
     await characterstic.startNotifications();
 
@@ -50,7 +70,10 @@ export default class BluetoothDeviceService {
       (event: Event) => {
         const value = (event.target as BluetoothRemoteGATTCharacteristic).value;
         if (value) {
-          onReading(value.getUint16(0).toString());
+          const translatedValue = translator.translateValue(value);
+          if (translatedValue !== undefined) {
+            onReading(translatedValue);
+          }
         }
       }
     );
@@ -58,7 +81,9 @@ export default class BluetoothDeviceService {
     return connectedDevice;
   }
 
-  async stopReading(connectedDevice: ConnectedBluetoothDevice) {
+  async stopReading(
+    connectedDevice: ConnectedBluetoothDevice
+  ): Promise<ConnectedBluetoothDevice> {
     const characteristic = await this.getPrimaryCharacterstic(connectedDevice);
     await characteristic.stopNotifications();
 
@@ -67,7 +92,7 @@ export default class BluetoothDeviceService {
 
   private async getPrimaryCharacterstic(
     connectedDevice: ConnectedBluetoothDevice
-  ) {
+  ): Promise<BluetoothRemoteGATTCharacteristic> {
     const service = await connectedDevice.server.getPrimaryService(
       this.getPrimaryService(connectedDevice.type)
     );
@@ -76,7 +101,7 @@ export default class BluetoothDeviceService {
     );
   }
 
-  private getPrimaryService(type: BluetoothDeviceServiceType) {
+  private getPrimaryService(type: BluetoothDeviceServiceType): string {
     let service;
 
     switch (type) {
@@ -96,7 +121,7 @@ export default class BluetoothDeviceService {
     return service;
   }
 
-  private getCharacteristic(type: BluetoothDeviceServiceType) {
+  private getCharacteristic(type: BluetoothDeviceServiceType): string {
     let service;
 
     switch (type) {

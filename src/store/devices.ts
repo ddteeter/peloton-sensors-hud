@@ -21,16 +21,8 @@ export class Devices extends VuexModule {
     this.bluetoothDevicePersistenceService = new SettingsPersistenceService();
   }
 
-  private persistSelectedDevices() {
-    this.bluetoothDevicePersistenceService.persistDevices(
-      this.selectedDevices.map((device) => {
-        return new TypedFlyweightBluetoothDevice(device.type, device.device.id);
-      })
-    );
-  }
-
   @Mutation
-  setSelectedDevice(newDevice: TypedBluetoothDevice) {
+  setSelectedDevice(newDevice: TypedBluetoothDevice): void {
     const existingIndex = this.selectedDevices.findIndex(
       (device) => device.type === newDevice.type
     );
@@ -40,11 +32,15 @@ export class Devices extends VuexModule {
     } else {
       this.selectedDevices.push(newDevice);
     }
-    this.persistSelectedDevices();
+    this.bluetoothDevicePersistenceService.persistDevices(
+      this.selectedDevices.map((device) => {
+        return new TypedFlyweightBluetoothDevice(device.type, device.device.id);
+      })
+    );
   }
 
   @Mutation
-  removeSelectedDevice(toRemove: TypedBluetoothDevice) {
+  removeSelectedDevice(toRemove: TypedBluetoothDevice): void {
     const existingIndex = this.selectedDevices.findIndex(
       (device) => device.type === toRemove.type
     );
@@ -52,11 +48,15 @@ export class Devices extends VuexModule {
     if (existingIndex > -1) {
       this.selectedDevices.splice(existingIndex, 1);
     }
-    this.persistSelectedDevices();
+    this.bluetoothDevicePersistenceService.persistDevices(
+      this.selectedDevices.map((device) => {
+        return new TypedFlyweightBluetoothDevice(device.type, device.device.id);
+      })
+    );
   }
 
   @Mutation
-  setConnectedDevice(newDevice: ConnectedBluetoothDevice) {
+  setConnectedDevice(newDevice: ConnectedBluetoothDevice): void {
     const existingIndex = this.connectedDevices.findIndex(
       (device) => device.type === newDevice.type
     );
@@ -69,7 +69,7 @@ export class Devices extends VuexModule {
   }
 
   @Mutation
-  removeConnectedDevice(toRemove: ConnectedBluetoothDevice) {
+  removeConnectedDevice(toRemove: ConnectedBluetoothDevice): void {
     const existingIndex = this.connectedDevices.findIndex(
       (device) => device.type === toRemove.type
     );
@@ -122,7 +122,7 @@ export class Devices extends VuexModule {
   }
 
   @Action
-  removeDevice(device: TypedBluetoothDevice | ConnectedBluetoothDevice) {
+  removeDevice(device: TypedBluetoothDevice | ConnectedBluetoothDevice): void {
     const connectedDevice = this.connectedDevices.find((connectedDevice) => {
       connectedDevice.type === device.type;
     });

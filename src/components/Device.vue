@@ -5,8 +5,8 @@
         <span class="value">{{ readingValue }}</span>
       </div>
       <div class="metadata">
-        <span class="name">{{ selectedDevice.name }}</span>
-        <span class="id">{{ selectedDevice.id }}</span>
+        <span class="name">{{ selectedDevice.device.name }}</span>
+        <span class="id">{{ selectedDevice.device.id }}</span>
         <span class="type">{{ selectableDevice.displayName }}</span>
       </div>
     </div>
@@ -58,7 +58,7 @@ export default class Devices extends Vue {
     this.bluetoothDeviceService = new BluetoothDeviceService();
   }
 
-  async selectDevice() {
+  async selectDevice(): Promise<void> {
     this.showingPicker = true;
     this.availableDevices = [];
     try {
@@ -78,7 +78,7 @@ export default class Devices extends Vue {
     this.showingPicker = false;
   }
 
-  deviceSelected(selectedDevice: FlyweightBluetoothDevice) {
+  deviceSelected(selectedDevice: FlyweightBluetoothDevice): void {
     this.bluetoothDeviceService.selectDevice(selectedDevice.deviceId);
   }
 }

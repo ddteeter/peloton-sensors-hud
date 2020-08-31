@@ -24,7 +24,9 @@ export class Settings extends VuexModule {
     this.ftp = ftp;
   }
 
-  private persistSettings() {
+  @Mutation
+  setWheelSize(wheelSize: number | undefined): void {
+    this.wheelSize = wheelSize;
     this.settingsPersistenceService.persistGeneralSettings({
       wheelSize: this.wheelSize,
       ftp: this.ftp
@@ -32,14 +34,11 @@ export class Settings extends VuexModule {
   }
 
   @Mutation
-  setWheelSize(wheelSize: number | undefined) {
-    this.wheelSize = wheelSize;
-    this.persistSettings();
-  }
-
-  @Mutation
-  setFTP(ftp: number | undefined) {
+  setFTP(ftp: number | undefined): void {
     this.ftp = ftp;
-    this.persistSettings();
+    this.settingsPersistenceService.persistGeneralSettings({
+      wheelSize: this.wheelSize,
+      ftp: this.ftp
+    });
   }
 }

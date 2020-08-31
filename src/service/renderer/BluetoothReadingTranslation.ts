@@ -1,23 +1,28 @@
-interface BluetoothReadingTranslator {
+import BluetoothDeviceServiceType from "@/model/BluetoothDeviceServiceType";
+
+export interface BluetoothReadingTranslator {
   translateValue(data: DataView): string | undefined;
 }
 
 const UINT16_MAX = 65536; // 2^16
 const UINT32_MAX = 4294967296; // 2^32
 
-export class HeartRateReadingTranslator implements BluetoothReadingTranslator {
+class HeartRateReadingTranslator implements BluetoothReadingTranslator {
+  translateValue(data: DataView): string | undefined {
+    return data.getUint8(1).toString();
+  }
+}
+
+class PowerReadingTranslator implements BluetoothReadingTranslator {
   translateValue(data: DataView): string | undefined {
     return data.getUint16(0).toString();
   }
 }
 
-export class PowerReadingTranslator implements BluetoothReadingTranslator {
-  translateValue(data: DataView): string | undefined {
-    return data.getUint16(0).toString();
-  }
+export enum SpeedOrCadenceType {
+  SPEED,
+  CADENCE
 }
-
-type SpeedOrCadenceType = "SPEED" | "CADENCE";
 
 type SpeedOrCadenceSample = {
   time: number;
@@ -69,8 +74,7 @@ const speedCalculation = (wheelSize: number) => {
   };
 };
 
-export class SpeedOrCadenceReadingTranslator
-  implements BluetoothReadingTranslator {
+class SpeedOrCadenceReadingTranslator implements BluetoothReadingTranslator {
   private calculation: (
     currentSample: SpeedOrCadenceSample,
     previousSample: SpeedOrCadenceSample
@@ -79,12 +83,14 @@ export class SpeedOrCadenceReadingTranslator
 
   private previousSample: SpeedOrCadenceSample | undefined;
 
-  constructor(type: SpeedOrCadenceType, wheelSize: number | undefined) {
+  constructor(type: SpeedOrCadenceType.CADENCE);
+  constructor(type: SpeedOrCadenceType.SPEED, wheelSize: number);
+  constructor(type: SpeedOrCadenceType, wheelSize?: number) {
     switch (type) {
-      case "CADENCE":
+      case SpeedOrCadenceType.CADENCE:
         this.calculation = cadenceCalculation;
         break;
-      case "SPEED":
+      case SpeedOrCadenceType.SPEED:
         if (wheelSize === undefined) {
           throw new Error("Speed cannot be calculated without wheel size");
         }
@@ -120,14 +126,14 @@ export class SpeedOrCadenceReadingTranslator
     const sample = new Map<SpeedOrCadenceType, SpeedOrCadenceSample>();
 
     if (hasCadence) {
-      sample.set("CADENCE", {
+      sample.set(SpeedOrCadenceType.CADENCE, {
         time: data.getUint16(9, true),
         revolutions: data.getUint16(7, true)
       });
     }
 
     if (hasSpeed) {
-      sample.set("SPEED", {
+      sample.set(SpeedOrCadenceType.SPEED, {
         time: data.getUint16(5, true),
         revolutions: data.getUint16(1, true)
       });
@@ -135,4 +141,44 @@ export class SpeedOrCadenceReadingTranslator
 
     return sample;
   }
+}
+
+export type SpeedOrCadenceConfig =
+  | {
+      type: SpeedOrCadenceType.CADENCE;
+    }
+  | { type: SpeedOrCadenceType.SPEED; wheelSize: number };
+
+export default function getTranslator(
+  config:
+    | { type: BluetoothDeviceServiceType.HR }
+    | { type: BluetoothDeviceServiceType.POWER }
+    | {
+        type: BluetoothDeviceServiceType.SPEED_AND_CADENCE;
+        options: SpeedOrCadenceConfig;
+      }
+): BluetoothReadingTranslator {
+  let translator: BluetoothReadingTranslator;
+  switch (config.type) {
+    case BluetoothDeviceServiceType.HR:
+      translator = new HeartRateReadingTranslator();
+      break;
+    case BluetoothDeviceServiceType.POWER:
+      translator = new PowerReadingTranslator();
+      break;
+    case BluetoothDeviceServiceType.SPEED_AND_CADENCE:
+      switch (config.options.type) {
+        case SpeedOrCadenceType.SPEED:
+          translator = new SpeedOrCadenceReadingTranslator(
+            config.options.type,
+            config.options.wheelSize
+          );
+          break;
+        case SpeedOrCadenceType.CADENCE:
+          translator = new SpeedOrCadenceReadingTranslator(config.options.type);
+          break;
+      }
+      break;
+  }
+  return translator;
 }

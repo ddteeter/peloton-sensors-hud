@@ -1,5 +1,7 @@
 import { ipcMain, BrowserView, BrowserWindow } from "electron";
 
+declare const __static: string;
+
 export default class PelotonWindowService {
   private showListener: () => void;
   private hideListener: () => void;
@@ -9,8 +11,6 @@ export default class PelotonWindowService {
     const browserView = new BrowserView({
       webPreferences: {
         nodeIntegration: false,
-        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-        // @ts-ignore
         preload: `${__static}/peloton/preload.js`
       }
     });
@@ -20,9 +20,9 @@ export default class PelotonWindowService {
     browserView.setAutoResize({ width: true, height: true });
     browserView.setBounds({
       x: 0,
-      y: 30,
+      y: 48,
       width: browserWindow.getSize()[0],
-      height: browserWindow.getSize()[1] - 150
+      height: browserWindow.getSize()[1] - 168
     });
     browserView.webContents.loadURL("https://members.onepeloton.com");
 

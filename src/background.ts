@@ -1,12 +1,10 @@
 "use strict";
 
 import { app, protocol, BrowserWindow, ipcMain } from "electron";
-import {
-  createProtocol,
-  installVueDevtools
-} from "vue-cli-plugin-electron-builder/lib";
+import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import BluetoothDeviceService from "./service/background/BluetoothDeviceService";
 import PelotonWindowService from "./service/background/PelotonWindowService";
+import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 const isDevelopment = process.env.NODE_ENV !== "production";
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -17,7 +15,7 @@ let pelotonWindowService: PelotonWindowService;
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
-  { scheme: "app", privileges: { secure: true, standard: true } }
+  { scheme: "app", privileges: { secure: true, standard: true } },
 ]);
 let isDevAndNotTest = false;
 
@@ -25,9 +23,11 @@ function createWindow() {
   // Create the browser window.
   win = new BrowserWindow({
     webPreferences: {
-      nodeIntegration: true
+      // Use pluginOptions.nodeIntegration, leave this alone
+      // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
+      nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION === "true",
     },
-    show: false
+    show: false,
   });
   win.maximize();
   win.show();
@@ -88,7 +88,7 @@ app.on("ready", async () => {
   if (isDevAndNotTest) {
     // Install Vue Devtools
     try {
-      await installVueDevtools();
+      await installExtension(VUEJS_DEVTOOLS);
     } catch (e) {
       console.error("Vue Devtools failed to install:", e.toString());
     }

@@ -14,13 +14,14 @@ export default class PelotonWindowService {
         preload: `${__static}/peloton/preload.js`,
       },
     });
+    browserWindow.setBrowserView(browserView);
     if (openDevTools) {
       browserView.webContents.openDevTools({ mode: "detach" });
     }
     browserView.setAutoResize({ horizontal: true, vertical: true });
     browserView.setBounds({
       x: 0,
-      y: 0,
+      y: 48,
       width: browserWindow.getSize()[0],
       height: browserWindow.getSize()[1] - 168,
     });
